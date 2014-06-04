@@ -5,7 +5,7 @@ Author URI: http://pankajgurudeb.blogspot.com
 Donate link: http://pankajgurudeb.blogspot.com/2013/04/meta-generator-and-version-info-remover.html
 Tags: remove, version, generator, security, meta, appended version, css ver, js ver, meta generator
 Requires at least: 3.0
-Tested up to: 3.6-beta3
+Tested up to: 3.9.1
 Stable tag: 2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
