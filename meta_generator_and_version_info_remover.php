@@ -6,11 +6,10 @@ Description: This plugin will remove the version information that gets appended 
 Author: Pankaj Kumar Mondal
 Author URI: http://pankajgurudeb.blogspot.com
 Tags: remove, version, generator, security, meta, appended version, css ver, js ver, meta generator
-Version: 2.1
+Version: 3.1
 License: GPLv2 or later.
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
-
 
 class Meta_generator_and_version_info_remover {
 	
@@ -59,6 +58,7 @@ class Meta_generator_and_version_info_remover {
 		add_settings_section('pkm_meta_generator_and_version_info_remover_section', 'Version Info Remover Settings', array($this, 'pkm_meta_generator_and_version_info_remover_callback'), __FILE__);
 		add_settings_field('pkm_version_info_remover_style_checkbox', 'Remove Version from Stylesheet', array($this, 'pkm_version_info_remover_style_checkbox_setting'), __FILE__, 'pkm_meta_generator_and_version_info_remover_section');
 		add_settings_field('pkm_version_info_remover_script_checkbox', 'Remove Version from Script', array($this, 'pkm_version_info_remover_script_checkbox_setting'), __FILE__, 'pkm_meta_generator_and_version_info_remover_section');
+		add_settings_field('pkm_version_info_remover_script_exclude_css', 'Enter Stylesheet/Script file names to exclude from version removal (comma separated list)', array($this, 'pkm_version_info_remover_script_exclude_css'), __FILE__, 'pkm_meta_generator_and_version_info_remover_section');
 		
 	}
 	
@@ -84,10 +84,18 @@ class Meta_generator_and_version_info_remover {
 		<?php 		
 	}
 	
+	public function pkm_version_info_remover_script_exclude_css() {
+		?>
+		<textarea placeholder="Enter comma separated list of file names (Stylesheet/Script files) to exclude them from version removal process. Version info will be kept for these files." name="meta_generator_and_version_info_remover_options[pkm_version_info_remover_script_exclude_css]" rows="7" cols="60" style="resize:none;"><?php echo $this->options['pkm_version_info_remover_script_exclude_css'] ; ?></textarea>
+		<?php 		
+	}
+	
 }
 
-
 $options = get_option('meta_generator_and_version_info_remover_options');
+
+$exclude_file_list = $options['pkm_version_info_remover_script_exclude_css'];
+$exclude_files_arr = array_map('trim', explode(',', $exclude_file_list));
 
 /**
  * Hook into the generator.
@@ -97,14 +105,20 @@ if( isset($options['pkm_meta_generator_remover_enable_checkbox']) && ($options['
 }
 
 /**
- *  remove wp version param from any enqueued scripts (using wp_enqueue_script()) or styles (using wp_enqueue_style()).
+ *  remove wp version param from any enqueued scripts (using wp_enqueue_script()) or styles (using wp_enqueue_style()). But first check the list of user defined excluded CSS/JS files... Those files will be skipped and version information will be kept.
  */
 function pkm_remove_appended_version_script_style( $target_url ) {
-	/* check if "ver=" argument exists in the url or not */	
-    if(strpos( $target_url, 'ver=' )) {
-        $target_url = remove_query_arg( 'ver', $target_url );
+	$filename_arr = explode('?', basename($target_url));
+	$filename = $filename_arr[0];
+	global $exclude_files_arr, $exclude_file_list;
+	// first check the list of user defined excluded CSS/JS files
+	if (!in_array(trim($filename), $exclude_files_arr)) {
+		/* check if "ver=" argument exists in the url or not */	
+		if(strpos( $target_url, 'ver=' )) {
+			$target_url = remove_query_arg( 'ver', $target_url );
+		}
 	}
-    return $target_url;
+	return $target_url;
 }
 
 /**
